@@ -53,7 +53,12 @@ class UserInfo(forms.Form):
         if mail != verify_mail:
             raise forms.ValidationError('メールアドレスが一致しません！')
         
-class PostModelForm(forms.ModelForm):
+class BaseForm(forms.ModelForm):
+    def save(self, *args, **kwargs):
+        print(f'Form: {self.__class__.__name__}実行')
+        return super(BaseForm, self).save(*args, **kwargs)
+    
+class PostModelForm(BaseForm):
 
     memo = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 30, 'cols': 20})
@@ -61,6 +66,15 @@ class PostModelForm(forms.ModelForm):
     
     class Meta:
         model = Post
-        # fields = '__all__'
+        fields = '__all__'
         # fields = ['name', 'title']
-        exclude = ['title']
+        # exclude = ['title']
+
+    def save(self, *args, **kwargs):
+        obj = super(PostModelForm, self).save(commit=False, *args, **kwargs)
+        obj.name = obj.name.upper()
+        print(type(obj))
+        print('save実行')
+        obj.save()
+        return obj
+    
