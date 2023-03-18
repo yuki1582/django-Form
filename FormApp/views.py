@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from django.forms import formset_factory, modelformset_factory
 from . import forms
+from .models import ModelSetPost
 
 # Create your views here.
 
@@ -31,4 +33,26 @@ def form_post(request):
             form.save()
     return render(
         request, 'formapp/form_post.html', context={'form': form}
+    )
+
+def form_set_post(request):
+    TestFormset = formset_factory(forms.FormSetPost, extra=3)
+    formset = TestFormset(request.POST or None)
+    if formset.is_valid():
+        for form in formset:
+            print(form.cleaned_data)
+    return render(
+        request, 'formapp/form_set_post.html',
+        context={'formset': formset} 
+    )
+
+def modelform_set_post(request):
+    # TestFormSet = modelformset_factory(ModelSetPost, fields='__all__', extra=3)
+    TestFormSet = modelformset_factory(ModelSetPost, form=forms.ModelFormSetPost, extra=3)
+
+    formset = TestFormSet(request.POST or None, queryset=ModelSetPost.objects.filter(id__gt=3))
+    if formset.is_valid():
+        formset.save()
+    return render(
+        request, 'formapp/modelform_set_post.html', context={'formset': formset}
     )

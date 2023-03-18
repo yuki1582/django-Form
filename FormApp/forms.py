@@ -1,7 +1,7 @@
 from django import forms
 from django.core import validators
 
-from .models import Post
+from .models import Post, ModelSetPost
 
 def check_name(value):
     if value == 'あああああ':
@@ -60,8 +60,10 @@ class BaseForm(forms.ModelForm):
     
 class PostModelForm(BaseForm):
 
+    name = forms.CharField(label='名前')
+    title = forms.CharField(label='タイトル')
     memo = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 30, 'cols': 20})
+        label='メモ', widget=forms.Textarea(attrs={'rows': 30, 'cols': 20})
     )
     
     class Meta:
@@ -78,3 +80,33 @@ class PostModelForm(BaseForm):
         obj.save()
         return obj
     
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if name == 'ああああ':
+            raise validators.ValidationError('名前が登録できません')
+        return name
+    
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if title == 'ああああ':
+            raise validators.ValidationError('タイトルが登録できません')
+        return title
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        title = cleaned_data.get('title')
+        is_exists = Post.objects.filter(title=title).first()
+        if is_exists:
+            raise validators.ValidationError('そのタイトルはすでに存在します')
+
+class FormSetPost(forms.Form):
+    title = forms.CharField(label='タイトル')
+    memo = forms.CharField(label='メモ')
+
+class ModelFormSetPost(forms.ModelForm):
+    title = forms.CharField(label='タイトル')
+    memo = forms.CharField(label='メモ')
+
+    class Meta:
+        model = ModelSetPost
+        fields = '__all__'
